@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -21,8 +20,11 @@ type RepoInfo struct {
 func getRepoInfo(owner, repoName string) (*RepoInfo, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s", owner, repoName)
 
-	client := &http.Client{Timeout: 6 * time.Second}
-	req, _ := http.NewRequest("GET", url, nil)
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	req.Header.Set("User-Agent", "my-cli-tool")
 
@@ -45,29 +47,28 @@ func getRepoInfo(owner, repoName string) (*RepoInfo, error) {
 }
 
 func parseInput() (string, string, error) {
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	text := scanner.Text()
-	args := strings.Split(text, " ")
+	var args []string = os.Args[1:]
 	if len(args) > 2 {
-		return "", "", fmt.Errorf("input should look like <owner>/<repoName> or <owner> <repoName>")
+		return "", "", fmt.Errorf("input arguments should look like <owner>/<repoName> or <owner> <repoName>")
 	}
 	if len(args) == 1 {
 		args = strings.Split(args[0], "/")
 	}
 	if len(args) != 2 {
-		return "", "", fmt.Errorf("input should look like <owner>/<repoName> or <owner> <repoName>")
+		return "", "", fmt.Errorf("input arguments should look like <owner>/<repoName> or <owner> <repoName>")
 	}
 	return args[0], args[1], nil
 
 }
 
-func (r *RepoInfo) printInfo() {
-	fmt.Printf("%s:\n", r.Name)
-	fmt.Printf("	Description: %s\n", r.Description)
-	fmt.Printf("	Stars      : %d\n", r.StarsCount)
-	fmt.Printf("	Forks      : %d\n", r.ForksCount)
-	fmt.Printf("	Created at : %s\n", r.CreatedAt.Format("02.01.2006"))
+func (r *RepoInfo) String() string {
+	var str strings.Builder
+	str.WriteString(fmt.Sprintf("%s:\n", r.Name))
+	str.WriteString(fmt.Sprintf("	Description: %s\n", r.Description))
+	str.WriteString(fmt.Sprintf("	Stars      : %d\n", r.StarsCount))
+	str.WriteString(fmt.Sprintf("	Forks      : %d\n", r.ForksCount))
+	str.WriteString(fmt.Sprintf("	Created at : %s", r.CreatedAt.Format("02.01.2006")))
+	return str.String()
 }
 
 func main() {
@@ -81,5 +82,5 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	repo_info.printInfo()
+	fmt.Println(repo_info)
 }

@@ -8,14 +8,12 @@ go build .
 ```
 # Execution and input
 ```bash
-./cli
-suvorovrain/golang-course
+./cli suvorovrain/golang-course
 ```
 
 # Alternative input
 ```bash
-./cli
-suvorovrain golang-course
+./cli suvorovrain golang-course
 ```
 
 # Output
