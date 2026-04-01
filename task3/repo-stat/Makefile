@@ -7,12 +7,14 @@ GOIMPORTS := $(GOBIN)/goimports
 GOLANGCI_LINT := $(GOBIN)/golangci-lint
 PROTOC_GEN_GO := $(GOBIN)/protoc-gen-go
 PROTOC_GEN_GO_GRPC := $(GOBIN)/protoc-gen-go-grpc
+SWAG := $(GOBIN)/swag
 
 PROTOC_GEN_GO_VERSION := v1.32.0
 PROTOC_GEN_GO_GRPC_VERSION := v1.6.1
 GOLANGCI_LINT_VERSION := v2.11.2
+SWAG_VERSION := v1.16.6
 
-.PHONY: lint fix protobuf protolint gofmtcheck golint tools test
+.PHONY: lint fix protobuf swagger protolint gofmtcheck golint tools test
 
 lint: protolint gofmtcheck golint
 
@@ -25,7 +27,12 @@ protobuf:
 	PATH="$(GOBIN):$$PATH" protoc \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		proto/subscriber/subscriber.proto
+		proto/subscriber/subscriber.proto \
+		proto/collector/collector.proto \
+		proto/processor/processor.proto
+
+swagger:
+	PATH="$(GOBIN):$$PATH" $(SWAG) init -g api/cmd/app/main.go -o api/docs
 
 protolint:
 	$(PROTOLINT) .
@@ -44,6 +51,7 @@ tools:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@$(PROTOC_GEN_GO_VERSION)
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$(PROTOC_GEN_GO_GRPC_VERSION)
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	go install github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION)
 
 test:
 	go test -race -coverprofile cover.out \
