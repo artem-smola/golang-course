@@ -10,15 +10,38 @@ type Pinger interface {
 }
 
 type Ping struct {
-	pinger Pinger
+	subscriberPinger Pinger
+	processorPinger  Pinger
 }
 
-func NewPing(pinger Pinger) *Ping {
+func NewPing(subscriberPinger Pinger, processorPinger Pinger) *Ping {
 	return &Ping{
-		pinger: pinger,
+		subscriberPinger: subscriberPinger,
+		processorPinger:  processorPinger,
 	}
 }
 
-func (u *Ping) Execute(ctx context.Context) domain.PingStatus {
-	return u.pinger.Ping(ctx)
+func (u *Ping) Execute(ctx context.Context) domain.PingResponse {
+	processorStatus := u.processorPinger.Ping(ctx)
+	subscriberStatus := u.subscriberPinger.Ping(ctx)
+
+	response := domain.PingResponse{
+		Status: domain.OverallStatusOK,
+		Services: []domain.ServiceResponse{
+			{
+				Name:   domain.ServiceNameProcessor,
+				Status: processorStatus,
+			},
+			{
+				Name:   domain.ServiceNameSubscriber,
+				Status: subscriberStatus,
+			},
+		},
+	}
+
+	if processorStatus == domain.PingStatusDown || subscriberStatus == domain.PingStatusDown {
+		response.Status = domain.OverallStatusDegraded
+	}
+
+	return response
 }

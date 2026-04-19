@@ -1,0 +1,30 @@
+FROM golang:1.25 AS build
+
+RUN apt update && apt install -y protobuf-compiler ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.32.0
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.1
+ENV PATH="$PATH:$(go env GOPATH)/bin"
+
+COPY go.mod go.sum /src/
+RUN cd /src && go mod download
+
+COPY proto /src/proto
+COPY collector /src/collector
+COPY platform /src/platform
+
+RUN cd /src && \
+    protoc --go_out=.      --go_opt=paths=source_relative \
+           --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+           proto/collector/collector.proto
+
+ENV CGO_ENABLED=0
+RUN cd /src && go build -o /collector collector/cmd/main.go
+
+FROM scratch
+
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=build /collector /collector
+
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+ENTRYPOINT ["/collector", "-config", "/config.yaml"]

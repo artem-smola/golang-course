@@ -2,7 +2,7 @@ app:
   app_name: "repo-stat-subscriber"
 
 grpc:
-  address: "localhost:8081"
+  address: "localhost:8080"
   timeout: "5s"
 
 logger:
