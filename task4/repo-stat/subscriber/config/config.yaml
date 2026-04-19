@@ -1,0 +1,21 @@
+app:
+  app_name: "repo-stat-subscriber"
+
+grpc:
+  address: "localhost:8080"
+  timeout: "5s"
+
+logger:
+  log_level: "DEBUG"
+
+postgres:
+  dsn: "postgres://postgres:postgres@localhost:5432/repo_stat?sslmode=disable"
+  min_conns: 1
+  max_conns: 10
+
+github:
+  base_url: "https://api.github.com"
+  timeout: "10s"
+
+migrations:
+  path: "file://subscriber/migrations"

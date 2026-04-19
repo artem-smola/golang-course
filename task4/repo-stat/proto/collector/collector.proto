@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package collector.v1;
+
+option go_package = "yadro.com/course/proto/gen/go/collector/v1;collectorv1";
+
+service Collector {
+    rpc GetRepoInfo(GetRepoInfoRequest) returns (GetRepoInfoResponse);
+    rpc GetSubscriptionsRepoInfo(GetSubscriptionsRepoInfoRequest) returns (GetSubscriptionsRepoInfoResponse);
+}
+
+message GetRepoInfoRequest {
+    string owner = 1;
+    string repo_name = 2;
+}
+
+message GetRepoInfoResponse {
+    string name = 1;
+    string description = 2;
+    int64 stars_count = 3;
+    int64 forks_count = 4;
+    string created_at = 5;
+}
+
+message SubscriptionRepoInfo {
+  string name = 1;
+  string description = 2;
+  int64 stars_count = 3;
+  int64 forks_count = 4;
+  string created_at = 5;
+}
+
+message GetSubscriptionsRepoInfoRequest {
+}
+
+message GetSubscriptionsRepoInfoResponse {
+    repeated SubscriptionRepoInfo repositories = 1;
+}

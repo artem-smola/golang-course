@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package processor.v1;
+
+option go_package = "yadro.com/course/proto/gen/go/collector/v1;collectorv1";
+
+service Processor {
+    rpc Ping(PingRequest) returns (PingResponse);
+    rpc GetRepoInfo(GetRepoInfoRequest) returns (GetRepoInfoResponse);
+    rpc GetSubscriptionsRepoInfo(GetSubscriptionsRepoInfoRequest) returns (GetSubscriptionsRepoInfoResponse); 
+}
+
+message PingRequest {
+}
+
+message PingResponse {
+  string status = 1;
+}
+
+message GetRepoInfoRequest {
+    string owner = 1;
+    string repo_name = 2;
+}
+
+message GetRepoInfoResponse {
+    string name = 1;
+    string description = 2;
+    int64 stars_count = 3;
+    int64 forks_count = 4;
+    string created_at = 5;
+}
+
+message SubscriptionRepoInfo {
+    string name = 1;
+    string description = 2;
+    int64 stars_count = 3;
+    int64 forks_count = 4;
+    string created_at = 5;
+}
+
+message GetSubscriptionsRepoInfoRequest {
+}
+
+message GetSubscriptionsRepoInfoResponse {
+    repeated SubscriptionRepoInfo repositories = 1;
+}

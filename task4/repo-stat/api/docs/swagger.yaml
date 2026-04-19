@@ -1,0 +1,271 @@
+basePath: /
+definitions:
+  dto.AddSubscriptionRequest:
+    properties:
+      owner:
+        example: Desbordante
+        type: string
+      repo_name:
+        example: desbordante-core
+        type: string
+    required:
+    - owner
+    - repo_name
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  dto.PingResponse:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/dto.ServicePingResponse'
+        type: array
+      status:
+        type: string
+    type: object
+  dto.RepoInfo:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      forks:
+        type: integer
+      name:
+        type: string
+      stars:
+        type: integer
+    type: object
+  dto.ServicePingResponse:
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.Subscription:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      owner:
+        type: string
+      repo_name:
+        type: string
+    type: object
+  dto.SubscriptionInfo:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      forks:
+        type: integer
+      name:
+        type: string
+      stars:
+        type: integer
+    type: object
+  dto.SubscriptionsInfoResponse:
+    properties:
+      repositories:
+        items:
+          $ref: '#/definitions/dto.SubscriptionInfo'
+        type: array
+    type: object
+  dto.SubscriptionsResponse:
+    properties:
+      subscriptions:
+        items:
+          $ref: '#/definitions/dto.Subscription'
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST gateway for service health and repository info.
+  title: Repo Stat API
+  version: "1.0"
+paths:
+  /api/ping:
+    get:
+      description: Checks the availability of processor and subscriber services.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PingResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.PingResponse'
+      summary: Service health check
+      tags:
+      - ping
+  /api/repositories/info:
+    get:
+      description: Returns basic information for a GitHub repository by URL.
+      parameters:
+      - description: GitHub repository URL
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RepoInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get GitHub repository info
+      tags:
+      - repositories
+  /subscriptions:
+    get:
+      description: List subscriptions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SubscriptionsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List subscriptions
+      tags:
+      - subscriptions
+    post:
+      consumes:
+      - application/json
+      description: Create subscription
+      parameters:
+      - description: Subscription payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.Subscription'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Create subscription
+      tags:
+      - subscriptions
+  /subscriptions/{owner}/{repo}:
+    delete:
+      description: Delete subscription
+      parameters:
+      - description: Repository owner
+        in: path
+        name: owner
+        required: true
+        type: string
+      - description: Repository name
+        in: path
+        name: repo
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Delete subscription
+      tags:
+      - subscriptions
+  /subscriptions/info:
+    get:
+      description: Get subscriptions repositories info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SubscriptionsInfoResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get subscriptions repositories info
+      tags:
+      - subscriptions
+swagger: "2.0"
