@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: repo-stat-postgres
+    restart: unless-stopped
+    ports:
+      - 25432:5432
+    environment:
+      - POSTGRES_DB=repo_stat
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d repo_stat"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    image: api:latest
+    build:
+      context: repo-stat
+      dockerfile: Dockerfile.api
+    container_name: api
+    restart: unless-stopped
+    ports:
+      - 28080:8080
+    volumes:
+      - ./repo-stat/api/config/config.yaml:/config.yaml
+    environment:
+      - LISTEN_ADDRESS=:8080
+      - TIMEOUT=30s
+      - SUBSCRIBER_ADDRESS=subscriber:8080
+      - PROCESSOR_ADDRESS=processor:8080
+      - SWAGGER_HOST=localhost:28080
+      - SWAGGER_SCHEME=http
+    depends_on:
+      - subscriber
+      - processor
+
+  processor:
+    image: processor:latest
+    build:
+      context: repo-stat
+      dockerfile: Dockerfile.processor
+    container_name: processor
+    restart: unless-stopped
+    volumes:
+      - ./repo-stat/processor/config/config.yaml:/config.yaml
+    environment:
+      - LISTEN_ADDRESS=:8080
+      - COLLECTOR_ADDRESS=collector:8080
+    depends_on:
+      - collector
+
+  subscriber:
+    image: subscriber:latest
+    build:
+      context: repo-stat
+      dockerfile: Dockerfile.subscriber
+    container_name: subscriber
+    restart: unless-stopped
+    volumes:
+      - ./repo-stat/subscriber/config/config.yaml:/config.yaml
+    environment:
+      - LISTEN_ADDRESS=:8080
+      - POSTGRES_DSN=postgres://postgres:postgres@postgres:5432/repo_stat?sslmode=disable
+      - MIGRATIONS_PATH=file:///app/migrations
+      - GITHUB_BASE_URL=https://api.github.com
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  collector:
+    image: collector:latest
+    build:
+      context: repo-stat
+      dockerfile: Dockerfile.collector
+    container_name: collector
+    restart: unless-stopped
+    volumes:
+      - ./repo-stat/collector/config/config.yaml:/config.yaml
+    environment:
+      - LISTEN_ADDRESS=:8080
+      - SUBSCRIBER_ADDRESS=subscriber:8080
+    depends_on:
+      - subscriber
+
+volumes:
+  postgres_data:

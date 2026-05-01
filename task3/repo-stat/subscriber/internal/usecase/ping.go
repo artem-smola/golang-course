@@ -9,5 +9,5 @@ func NewPing() *Ping {
 }
 
 func (u *Ping) Execute(context.Context) string {
-	return "pong"
+	return "up"
 }

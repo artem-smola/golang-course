@@ -34,9 +34,14 @@ func NewClient(address string, log *slog.Logger) (*Client, error) {
 }
 
 func (c *Client) Ping(ctx context.Context) domain.PingStatus {
-	_, err := c.pb.Ping(ctx, &subscirberpb.PingRequest{})
+	resp, err := c.pb.Ping(ctx, &subscirberpb.PingRequest{})
 	if err != nil {
 		c.log.Error("subscriber ping failed", "error", err)
+		return domain.PingStatusDown
+	}
+
+	if resp.GetStatus() != string(domain.PingStatusUp) {
+		c.log.Error("subscriber ping returned non-up status", "status", resp.GetStatus())
 		return domain.PingStatusDown
 	}
 
